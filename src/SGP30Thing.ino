@@ -37,8 +37,8 @@ void setup()
         Serial.println(msg);
     });
 
-    String sensorTopic = "things/" + thing.clientId() + "/sgp30/airquality";
-    thing.addSensor(sensorTopic, 60000, getValue);
+    String sensorTopic = "things/" + thing.clientId() + "/sgp30/values";
+    thing.addSensor(sensorTopic, 10000, getValue);
 }
 
 
@@ -46,9 +46,17 @@ void getValue(Value &value)
 {
     if (sgp30.IAQmeasure())
     {
-        String line = "CO2:" + String(sgp30.eCO2) + ",TVOC:" + String(sgp30.TVOC);
-        value = line;
-        Serial.println(line);
+        const int capacity = JSON_OBJECT_SIZE(3);
+        StaticJsonBuffer<capacity> jb;
+        JsonObject& doc = jb.createObject();
+        //DynamicJsonDocument doc(1024);
+        doc["eCO2"] = sgp30.eCO2;
+        doc["TVOC"] = sgp30.TVOC;
+        String output;
+        doc.printTo(output);
+        value = output;
+        Serial.println(output);
+        //serializeJson(doc, Serial);
     }
     else
     {
